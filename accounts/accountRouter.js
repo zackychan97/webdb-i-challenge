@@ -1,10 +1,11 @@
 const express = require('express');
-const knex = require('../data/dbConfig');
+const knex = require('../data/dbConfig.js');
 const router = express.Router();
 
 // This makes sure the ID being given even exists
 function idChecker(req, res, next) {
-    knex.select('*')
+    knex
+    .select('*')
     .from('accounts')
     .where({ id: req.params.id })
     .first()
@@ -37,7 +38,8 @@ function postChecker(req, res, next) {
 
 //-- router get /
 router.get('/', (req, res) => {
-    knex.select('*')
+    knex
+    .select('*')
     .from('accounts')
     .then(response => {
         res.status(200).json(response);
@@ -49,7 +51,7 @@ router.get('/', (req, res) => {
 })
 
 //-- router get /:id
-router.get('/id', postChecker, (req, res) => {
+router.get('/:id', idChecker, (req, res) => {
     res.send(req.account);
 });
 
@@ -73,7 +75,42 @@ router.post('/', postChecker, (req, res) => {
         console.log(error);
         res.status(500).json({ errorMessage: "Cant add new" })
     })
-    router.delete()
+
+
+    //-- router delete /:id
+    router.delete('/:id', idChecker, (req, res) => {
+        const { id } = req.params;
+
+        knex('accounts')
+            .where({ id })
+            .del()
+            .then(response => {
+                res.status(200).json({ message: `${response} deleted` })
+            })
+            .catch(error => {
+                console.log(error);
+                res.status(500).json({ errorMessage: "Coulndt delete the account" })
+            })
+    });
+
+    //-- router put /:id
+    router.put('/:id', idChecker, (req, res) => {
+        const { id } = req.params;
+        const puts = req.body;
+
+        knex('accounts')
+        .where({ id })
+        .update(puts)
+        .then(response => {
+            res.status(200).json({ message: `${response} updated` })
+        })
+        .catch(error => {
+            console.log(error);
+            res.status(500).json({ errorMessage: "Couldnt update account" })
+        })
+    })
+
+
 })
 
 module.exports = router;
